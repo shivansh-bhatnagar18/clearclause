@@ -1,25 +1,19 @@
 function extractLegalText() {
-    const selectors = [
-        "main",
-        "article",
-        ".terms",
-        ".privacy",
-        ".content",
-        "body"
-    ];
-
+    const selectors = ["main", "article", ".terms", ".privacy", ".content", "body"];
     let textContent = "";
-    selectors.forEach(selector => {
-        const element = document.querySelector(selector);
-        if (element) {
-            textContent += " " + element.textContent;
-        }
-    });
-    console.log(textContent);
+    for (const selector of selectors) {
+      const el = document.querySelector(selector);
+      if (el) textContent += " " + el.textContent;
+    }
     return textContent.trim();
-}
-
-chrome.runtime.sendMessage({
-    action: "EXTRACTED_TEXT",
-    data: extractLegalText(),
-});
+  }
+  
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.type === "GET_PAGE_TEXT") {
+      const extractedText = extractLegalText();
+      console.log("Extracted Text (content.js):", extractedText.slice(0, 200));
+      sendResponse({ text: extractedText });
+      return true; // keeps the message channel open if needed
+    }
+  });
+  
