@@ -7,6 +7,8 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
+const PORT = process.env.PORT || 10000;
+
 const vertex_ai = new VertexAI({
     project: "clearclause-470012",
     location: "us-central1",
@@ -66,4 +68,7 @@ Rules:
     }
   });
   
-  app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+}
+);
