@@ -28,17 +28,46 @@ export default function Popup() {
     new Promise((resolve, reject) => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tabId = tabs[0]?.id;
+        const tab = tabs[0];
+        const url = tab?.url;
         if (!tabId) return reject(new Error("No active tab"));
-
-        chrome.tabs.sendMessage(tabId, { type: "GET_PAGE_TEXT" }, (response) => {
-          if (chrome.runtime.lastError) {
-            return reject(new Error(chrome.runtime.lastError.message));
-          }
-          if (!response?.text) {
-            return reject(new Error("No text returned from content script"));
-          }
-          resolve(response);
-        });
+        if (!url) return reject(new Error("Tab has no URL"));
+        console.log("Active tab URL:", url);
+        if (url.endsWith(".pdf")) {
+          // chrome.runtime.sendMessage(
+          //   { type: "EXTRACT_PDF", url: tab.url },
+          //   (response) => {
+          //     if (chrome.runtime.lastError) {
+          //       return reject(new Error(chrome.runtime.lastError.message));
+          //     }
+          //     if (!response?.text) {
+          //       return reject(new Error("No text returned from PDF extractor"));
+          //     }
+          //     resolve(response);
+          //   }
+          // );
+          chrome.runtime.sendMessage({
+            type: "EXTRACT_PDF",
+            url: "https://assets-bg.gem.gov.in/resources/upload/shared_doc/gtc/GeM-GTC-40-1741175351.pdf"
+          }, response => {
+            if (response.ok) {
+              console.log("PDF text:", response.text.slice(0, 500)); // preview first 500 chars
+            } else {
+              console.error("Extract error:", response.error);
+            }
+          });
+          
+        } else {
+          chrome.tabs.sendMessage(tabId, { type: "GET_PAGE_TEXT" }, (response) => {
+            if (chrome.runtime.lastError) {
+              return reject(new Error(chrome.runtime.lastError.message));
+            }
+            if (!response?.text) {
+              return reject(new Error("No text returned from content script"));
+            }
+            resolve(response);
+          });
+        }
       });
     });
 
@@ -54,7 +83,7 @@ export default function Popup() {
       setText(extracted);
 
       // 2) Send THAT text to your backend (don’t use stale state)
-      const resp = await fetch("http://localhost:5000/analyze", {
+      const resp = await fetch("https://clearclause.onrender.com/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: extracted }),
