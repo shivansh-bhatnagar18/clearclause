@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { VertexAI } from "@google-cloud/vertexai";
 import multer from "multer";
-import pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
