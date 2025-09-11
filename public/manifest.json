@@ -17,12 +17,6 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_idle"
-    },
-    {
-      "matches": ["<all_urls>"],
-      "js": ["pdf-handler.mjs"],
-      "run_at": "document_idle",
-      "type": "module"
     }
   ],
   "web_accessible_resources": [
