@@ -32,31 +32,19 @@ export default function Popup() {
         const url = tab?.url;
         if (!tabId) return reject(new Error("No active tab"));
         if (!url) return reject(new Error("Tab has no URL"));
-        console.log("Active tab URL:", url);
         if (url.endsWith(".pdf")) {
-          // chrome.runtime.sendMessage(
-          //   { type: "EXTRACT_PDF", url: tab.url },
-          //   (response) => {
-          //     if (chrome.runtime.lastError) {
-          //       return reject(new Error(chrome.runtime.lastError.message));
-          //     }
-          //     if (!response?.text) {
-          //       return reject(new Error("No text returned from PDF extractor"));
-          //     }
-          //     resolve(response);
-          //   }
-          // );
-          chrome.runtime.sendMessage({
-            type: "EXTRACT_PDF",
-            url: "https://assets-bg.gem.gov.in/resources/upload/shared_doc/gtc/GeM-GTC-40-1741175351.pdf"
-          }, response => {
-            if (response.ok) {
-              console.log("PDF text:", response.text.slice(0, 500)); // preview first 500 chars
-            } else {
-              console.error("Extract error:", response.error);
+          chrome.runtime.sendMessage(
+            { type: "EXTRACT_PDF", url: tab.url },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                return reject(new Error(chrome.runtime.lastError.message));
+              }
+              if (!response?.text) {
+                return reject(new Error("No text returned from PDF extractor"));
+              }
+              resolve(response);
             }
-          });
-          
+          );
         } else {
           chrome.tabs.sendMessage(tabId, { type: "GET_PAGE_TEXT" }, (response) => {
             if (chrome.runtime.lastError) {
@@ -83,22 +71,23 @@ export default function Popup() {
       setText(extracted);
 
       // 2) Send THAT text to your backend (don’t use stale state)
-      const resp = await fetch("https://clearclause.onrender.com/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: extracted }),
-      });
+      // const resp = await fetch("https://clearclause.onrender.com/analyze", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ text: extracted }),
+      // });
 
-      if (!resp.ok) {
-        const errText = await resp.text();
-        throw new Error(`Backend error: ${resp.status} ${errText}`);
-      }
+      // if (!resp.ok) {
+      //   const errText = await resp.text();
+      //   throw new Error(`Backend error: ${resp.status} ${errText}`);
+      // }
 
-      const data = await resp.json();
+      // const data = await resp.json();
 
       // Expecting: { summary: string, critical_points: CriticalPoint[] }
-      setSummary(data.summary || "");
-      setCriticalPoints(Array.isArray(data.critical_points) ? data.critical_points : []);
+      // setSummary(data.summary || "Text Extracted Successfully");
+      setSummary("Text Extracted Successfully" + (extracted.length > 500 ? ` (showing first 500 chars: ${extracted.slice(0, 500)}...)` : `: ${extracted}`));
+      // setCriticalPoints(Array.isArray(data.critical_points) ? data.critical_points : []);
     } catch (err: any) {
       console.error("Extract/analyze error:", err);
       setErrorMsg(err?.message || "Something went wrong");

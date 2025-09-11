@@ -1,3 +1,4 @@
+// Extract HTML text
 function extractLegalText() {
   const selectors = ["main", "article", ".terms", ".privacy", ".content", "body"];
   let textContent = "";
@@ -10,8 +11,7 @@ function extractLegalText() {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "GET_PAGE_TEXT") {
-    const extractedText = extractLegalText();
-    console.log("Extracted Text (content.js):", extractedText.slice(0, 200));
-    sendResponse({ ok: true, text: extractedText });
+    const text = extractLegalText();
+    sendResponse({ ok: true, text });
   }
 });
