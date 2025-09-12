@@ -13,6 +13,11 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 const PORT = process.env.PORT || 10000;
 
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  next();
+});
+
 const vertex_ai = new VertexAI({
     project: "clearclause-470012",
     location: "us-central1",
