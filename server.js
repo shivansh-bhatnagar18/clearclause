@@ -97,7 +97,7 @@ Rules:
           }))
         );
       }
-  
+      console.log("✅ Parsed model output:", parsed);  
       res.json(parsed);
     } catch (err) {
       console.error(err);
