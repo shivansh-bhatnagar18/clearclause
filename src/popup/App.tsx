@@ -86,23 +86,23 @@ export default function Popup() {
       setText(extracted);
 
       // 2) Send THAT text to your backend (don’t use stale state)
-      // const resp = await fetch("https://clearclause.onrender.com/analyze", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ text: extracted, selected }),
-      // });
+      const resp = await fetch("https://clearclause.onrender.com/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: extracted, language: selected}),
+      });
 
-      // if (!resp.ok) {
-      //   const errText = await resp.text();
-      //   throw new Error(`Backend error: ${resp.status} ${errText}`);
-      // }
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`Backend error: ${resp.status} ${errText}`);
+      }
 
-      // const data = await resp.json();
+      const data = await resp.json();
 
       // Expecting: { summary: string, critical_points: CriticalPoint[] }
-      // setSummary(data.summary || "Text Extracted Successfully");
-      setSummary("Text Extracted Successfully" + (extracted.length > 500 ? ` (showing first 500 chars: ${extracted.slice(0, 500)}...)` : `: ${extracted}`));
-      // setCriticalPoints(Array.isArray(data.critical_points) ? data.critical_points : []);
+      setSummary(data.summary || "Text Extracted Successfully");
+      // setSummary("Text Extracted Successfully" + (extracted.length > 500 ? ` (showing first 500 chars: ${extracted.slice(0, 500)}...)` : `: ${extracted}`));
+      setCriticalPoints(Array.isArray(data.critical_points) ? data.critical_points : []);
     } catch (err: any) {
       console.error("Extract/analyze error:", err);
       setErrorMsg(err?.message || "Something went wrong");
@@ -126,7 +126,10 @@ export default function Popup() {
       <FormControl fullWidth sx={{ mt: 2 }}>
       <Select
         value={selected}
-        onChange={(e) => setSelected(e.target.value)}
+        onChange={(e) => {
+          setSelected(e.target.value);
+          console.log("Language changed to:", e.target.value);
+        }}
         sx={{
           borderRadius: "12px",
           fontWeight: "bold",

@@ -27,13 +27,19 @@ const projectId = "clearclause-470012";
 const location = "global";
 
 async function translateText(text, targetLanguage) {
-  const [response] = await translationClient.translateText({
-    parent: `projects/${projectId}/locations/${location}`,
-    contents: [text],
-    mimeType: "text/plain",
-    targetLanguageCode: targetLanguage,
-  });
-  return response.translations?.[0]?.translatedText || text;
+  if (!text) return text;
+  try {
+    const [response] = await translationClient.translateText({
+      parent: `projects/${projectId}/locations/${location}`,
+      contents: [text],
+      mimeType: "text/plain",
+      targetLanguageCode: targetLanguage,
+    });
+    return response.translations?.[0]?.translatedText || text;
+  } catch (err) {
+    console.error("Translation failed:", err);
+    return text; // fallback to original
+  }
 }
 
 app.post("/analyze", async (req, res) => {
@@ -74,19 +80,22 @@ Rules:
       let parsed;
       try {
         parsed = JSON.parse(clean);
-        if (language && language !== "en") {
-          parsed.summary = await translateText(parsed.summary, language);
-          parsed.critical_points = await Promise.all(
-            parsed.critical_points.map(async (point) => ({
-              clause: await translateText(point.clause, language),
-              impact: await translateText(point.impact, language),
-              explanation: await translateText(point.explanation, language),
-            }))
-          );
-        }
       } catch (e) {
-        console.error("Failed to parse model output:", clean);
+        console.error("❌ Failed to parse model output:", clean);
         return res.status(500).json({ error: "Invalid model output" });
+      }
+
+      // Translate values if needed
+      if (language && language !== "en") {
+        parsed.summary = await translateText(parsed.summary, language);
+
+        parsed.critical_points = await Promise.all(
+          parsed.critical_points.map(async (point) => ({
+            clause: await translateText(point.clause, language),
+            impact: await translateText(point.impact, language),
+            explanation: await translateText(point.explanation, language),
+          }))
+        );
       }
   
       res.json(parsed);
