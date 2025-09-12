@@ -8,7 +8,12 @@ import {
   List,
   ListItem,
   ListItemText,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
+import GavelIcon from "@mui/icons-material/Gavel";
 
 type CriticalPoint = {
   clause: string;
@@ -16,8 +21,19 @@ type CriticalPoint = {
   explanation: string;
 };
 
+const languages = [
+  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "hi", name: "Hindi", flag: "🇮🇳" },
+  { code: "es", name: "Spanish", flag: "🇪🇸" },
+  { code: "fr", name: "French", flag: "🇫🇷" },
+  { code: "de", name: "German", flag: "🇩🇪" },
+  { code: "ja", name: "Japanese", flag: "🇯🇵" },
+  { code: "zh", name: "Chinese", flag: "🇨🇳" },
+];
+
 export default function Popup() {
   const [file, setFile] = useState<File | null>(null);
+  const [selected, setSelected] = useState("en");
   const [text, setText] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
   const [criticalPoints, setCriticalPoints] = useState<CriticalPoint[]>([]);
@@ -96,24 +112,46 @@ export default function Popup() {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) setFile(event.target.files[0]);
-  };
-
-  const handleSubmit = () => {
-    if (file) console.log("File submitted:", file.name);
-    else alert("Please upload a file first!");
-  };
-
   return (
     <Paper
       elevation={3}
-      sx={{ width: 320, p: 3, textAlign: "center", borderRadius: "16px" }}
+      sx={{ width: 320, px: 5, py: 3, textAlign: "center", borderRadius: "16px" }}
     >
       <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
         ClearClause
       </Typography>
+      <Typography variant="body2" color="textSecondary">
+            Analyze Legal Agreements and T&Cs
+      </Typography>
 
+      <FormControl fullWidth sx={{ mt: 2 }}>
+      <Select
+        value={selected}
+        onChange={(e) => setSelected(e.target.value)}
+        sx={{
+          borderRadius: "12px",
+          fontWeight: "bold",
+          backgroundColor: "#f9f9f9",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          "& .MuiSelect-select": {
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          },
+        }}
+      >
+        {languages.map((lang) => (
+          <MenuItem key={lang.code} value={lang.code}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <span style={{ fontSize: "1.2rem" }}>{lang.flag}</span>
+              <Typography variant="body1">{lang.name}</Typography>
+            </Box>
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
+      {/* 🔹 Analyze Current Tab */}
       <Button
         variant="contained"
         fullWidth
@@ -121,15 +159,17 @@ export default function Popup() {
         onClick={handleExtract}
         disabled={loading}
       >
-        {loading ? <CircularProgress size={24} color="inherit" /> : "Analyse Document"}
+        {loading ? <CircularProgress size={24} color="inherit" /> : "Analyse Current Tab"}
       </Button>
 
+      {/* 🔹 Errors */}
       {errorMsg && (
         <Typography variant="body2" color="error" sx={{ mt: 1 }}>
           {errorMsg}
         </Typography>
       )}
 
+      {/* 🔹 Results */}
       {summary && (
         <Box sx={{ textAlign: "left", mt: 2 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
@@ -160,31 +200,6 @@ export default function Popup() {
           </List>
         </Box>
       )}
-
-      <Box
-        sx={{
-          border: "2px dashed grey",
-          borderRadius: "12px",
-          p: 3,
-          my: 2,
-          cursor: "pointer",
-          color: "gray",
-        }}
-      >
-        <label htmlFor="file-upload" style={{ cursor: "pointer" }}>
-          {file ? file.name : "Upload your file here"}
-        </label>
-        <input id="file-upload" type="file" hidden onChange={handleFileChange} />
-      </Box>
-
-      <Button
-        variant="outlined"
-        fullWidth
-        onClick={handleSubmit}
-        sx={{ borderRadius: "12px", fontWeight: "bold", textTransform: "none" }}
-      >
-        Submit
-      </Button>
     </Paper>
   );
 }
