@@ -3,6 +3,7 @@ import cors from "cors";
 import { VertexAI } from "@google-cloud/vertexai";
 import multer from "multer";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import { TranslationServiceClient } from "@google-cloud/translate";
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -21,9 +22,23 @@ const vertex_ai = new VertexAI({
     model: "gemini-2.5-pro",
   });
 
+const translationClient = new TranslationServiceClient();
+const projectId = "clearclause-470012";
+const location = "global";
+
+async function translateText(text, targetLanguage) {
+  const [response] = await translationClient.translateText({
+    parent: `projects/${projectId}/locations/${location}`,
+    contents: [text],
+    mimeType: "text/plain",
+    targetLanguageCode: targetLanguage,
+  });
+  return response.translations?.[0]?.translatedText || text;
+}
+
 app.post("/analyze", async (req, res) => {
     try {
-      const { text } = req.body;
+      const { text, language } = req.body;
   
       const prompt = `
   You are a legal agreement analyzer. 
@@ -59,6 +74,16 @@ Rules:
       let parsed;
       try {
         parsed = JSON.parse(clean);
+        if (language && language !== "en") {
+          parsed.summary = await translateText(parsed.summary, language);
+          parsed.critical_points = await Promise.all(
+            parsed.critical_points.map(async (point) => ({
+              clause: await translateText(point.clause, language),
+              impact: await translateText(point.impact, language),
+              explanation: await translateText(point.explanation, language),
+            }))
+          );
+        }
       } catch (e) {
         console.error("Failed to parse model output:", clean);
         return res.status(500).json({ error: "Invalid model output" });

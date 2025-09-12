@@ -13,7 +13,6 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import GavelIcon from "@mui/icons-material/Gavel";
 
 type CriticalPoint = {
   clause: string;
@@ -90,7 +89,7 @@ export default function Popup() {
       // const resp = await fetch("https://clearclause.onrender.com/analyze", {
       //   method: "POST",
       //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ text: extracted }),
+      //   body: JSON.stringify({ text: extracted, selected }),
       // });
 
       // if (!resp.ok) {
