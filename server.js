@@ -42,36 +42,41 @@ app.post("/analyze", async (req, res) => {
   
       const responseLang = languageMap[language] || "English";
 
-    const prompt = `
-You are a legal agreement analyzer. 
-Read the given text and respond ONLY in valid JSON.
-Do not include explanations outside of JSON.
-
-Your response MUST strictly follow this schema:
-
-{
-  "summary": "string — short, clear summary of the agreement",
-  "critical_points": [
-    {
-      "clause": "string — name of the clause",
-      "impact": "string — type of impact (e.g., Loss of Rights, Financial Risk, Privacy Concern)",
-      "explanation": "string — plain explanation of why this clause matters for the user"
-    }
-  ]
-}
-
-Rules:
-- Always return an array of objects for \`critical_points\`.
-- If no critical points are found, return an empty array [].
-- Do not include anything outside this JSON object.
-
-IMPORTANT:
-- All values (summary, clause, impact, explanation) MUST be written in ${responseLang}.
-- Keep JSON keys in English — only translate the values.
-
-Text:
-${text}
-`;
+      const prompt = `
+      You are a legal agreement analyzer. 
+      Read the given text and respond ONLY in valid JSON.
+      Do not include explanations outside of JSON.
+      
+      Your response MUST strictly follow this schema:
+      
+      {
+        "summary": "string — short, clear summary of the agreement",
+        "critical_points": [
+          {
+            "clause": "string — name or text of the clause",
+            "impact": "string — type of impact (e.g., Loss of Rights, Financial Risk, Privacy Concern)",
+            "explanation": "string — plain explanation of why this clause matters for the user",
+            "category": "string — one of: Payment Terms, Termination, Data Privacy, Liability, Refund Policy, Arbitration, Miscellaneous",
+            "riskLevel": "string — one of: low, medium, high"
+          }
+        ]
+      }
+      
+      Rules:
+      - Always return an array of objects for \`critical_points\`.
+      - If no critical points are found, return an empty array [].
+      - Categories must be chosen only from the provided list. If unsure, use "Miscellaneous".
+      - riskLevel must always be a lowercase string: "low", "medium", or "high".
+      - Do not include anything outside this JSON object.
+      
+      IMPORTANT:
+      - All values (summary, clause, impact, explanation, category, riskLevel) MUST be written in ${responseLang}.
+      - JSON keys MUST remain in English — only translate the values.
+      
+      Text:
+      ${text}
+      `;
+      
   
       const result = await model.generateContent(prompt);
       const raw = result.response.candidates[0].content.parts[0].text;

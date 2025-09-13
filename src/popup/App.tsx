@@ -25,6 +25,8 @@ type CriticalPoint = {
   clause: string;
   impact: string;
   explanation: string;
+  category: string;
+  riskLevel: "low"|"medium"|"high";
 };
 
 const languages = [
@@ -196,12 +198,42 @@ export default function Popup() {
             {criticalPoints.map((point, index) => (
               <ListItem key={index} alignItems="flex-start">
                 <ListItemText
-                  primary={point.clause || "Clause"}
+                  primary={
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                        {point.category || "Uncategorized"}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          px: 1.5,
+                          py: 0.5,
+                          borderRadius: "8px",
+                          color: "white",
+                          fontWeight: "bold",
+                          backgroundColor:
+                            point.riskLevel === "high"
+                              ? "red"
+                              : point.riskLevel === "medium"
+                              ? "orange"
+                              : "green",
+                        }}
+                      >
+                        {point.riskLevel?.toUpperCase() || "N/A"}
+                      </Typography>
+                    </Box>
+                  }
                   secondary={
                     <>
-                      <strong>Impact:</strong> {point.impact || "—"}
-                      <br />
-                      <strong>Explanation:</strong> {point.explanation || "—"}
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <strong>Clause:</strong> {point.clause || "—"}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Impact:</strong> {point.impact || "—"}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Explanation:</strong> {point.explanation || "—"}
+                      </Typography>
                     </>
                   }
                 />
