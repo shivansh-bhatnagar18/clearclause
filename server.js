@@ -31,6 +31,16 @@ const translationClient = new TranslationServiceClient();
 const projectId = "clearclause-470012";
 const location = "global";
 
+const languageMap = {
+  en: "English",
+  hi: "Hindi",
+  es: "Spanish",
+  fr: "French",
+  de: "German",
+  ja: "Japanese",
+  zh: "Chinese",
+};
+
 async function translateText(text, targetLanguage) {
   if (!text) return text;
   try {
@@ -51,9 +61,11 @@ app.post("/analyze", async (req, res) => {
     try {
       const { text, language } = req.body;
   
-      const prompt = `
-  You are a legal agreement analyzer. 
-Read the given text and respond ONLY in valid JSON. 
+      const responseLang = languageMap[language] || "English";
+
+    const prompt = `
+You are a legal agreement analyzer. 
+Read the given text and respond ONLY in valid JSON.
 Do not include explanations outside of JSON.
 
 Your response MUST strictly follow this schema:
@@ -70,14 +82,17 @@ Your response MUST strictly follow this schema:
 }
 
 Rules:
-- Always return an array of objects for \`critical_points\`. Never return plain strings.  
-- If no critical points are found, return an empty array [].  
-- Do not include anything outside this JSON object. 
+- Always return an array of objects for \`critical_points\`.
+- If no critical points are found, return an empty array [].
+- Do not include anything outside this JSON object.
 
-  
-  Text:
-  ${text}
-      `;
+IMPORTANT:
+- All values (summary, clause, impact, explanation) MUST be written in ${responseLang}.
+- Keep JSON keys in English — only translate the values.
+
+Text:
+${text}
+`;
   
       const result = await model.generateContent(prompt);
       const raw = result.response.candidates[0].content.parts[0].text;
@@ -88,19 +103,6 @@ Rules:
       } catch (e) {
         console.error("❌ Failed to parse model output:", clean);
         return res.status(500).json({ error: "Invalid model output" });
-      }
-
-      // Translate values if needed
-      if (language && language !== "en") {
-        parsed.summary = await translateText(parsed.summary, language);
-
-        parsed.critical_points = await Promise.all(
-          parsed.critical_points.map(async (point) => ({
-            clause: await translateText(point.clause, language),
-            impact: await translateText(point.impact, language),
-            explanation: await translateText(point.explanation, language),
-          }))
-        );
       }
       console.log("✅ Parsed model output:", parsed);  
       res.json(parsed);

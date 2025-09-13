@@ -13,6 +13,13 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+const theme = createTheme({
+  typography: {
+    fontFamily: "Noto Sans, sans-serif",
+  },
+});
 
 type CriticalPoint = {
   clause: string;
@@ -84,7 +91,7 @@ export default function Popup() {
       // 1) Get fresh text from the active tab (content.js)
       const { text: extracted } = await askPageForText();
       setText(extracted);
-
+      console.log("Passing Language to backend:", selected);
       // 2) Send THAT text to your backend (don’t use stale state)
       const resp = await fetch("https://clearclause.onrender.com/analyze", {
         method: "POST",
@@ -112,6 +119,7 @@ export default function Popup() {
   };
 
   return (
+    <ThemeProvider theme={theme}>
     <Paper
       elevation={3}
       sx={{ width: 320, px: 5, py: 3, textAlign: "center", borderRadius: "16px" }}
@@ -203,5 +211,6 @@ export default function Popup() {
         </Box>
       )}
     </Paper>
+    </ThemeProvider>
   );
 }
