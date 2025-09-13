@@ -15,6 +15,7 @@ import {
   Tooltip
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import jsPDF from "jspdf";
 
 const theme = createTheme({
   typography: {
@@ -125,6 +126,61 @@ export default function Popup() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportJSON = () => {
+    const data = {
+      summary,
+      critical_points: criticalPoints,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "clearclause-analysis.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.text("ClearClause Analysis", 10, 10);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`Summary: ${summary}`, 10, 20);
+
+    let y = 30;
+    criticalPoints.forEach((point, i) => {
+      doc.text(`Clause ${i + 1}: ${point.clause}`, 10, y);
+      y += 8;
+      doc.text(`Impact: ${point.impact}`, 10, y);
+      y += 8;
+      doc.text(`Explanation: ${point.explanation}`, 10, y);
+      y += 8;
+      doc.text(`Category: ${point.category || "N/A"}`, 10, y);
+      y += 8;
+      doc.text(`Risk: ${point.riskLevel?.toUpperCase() || "N/A"}`, 10, y);
+      y += 12;
+
+      if (point.glossary?.term) {
+        doc.text(
+          `Glossary: ${point.glossary.term} → ${point.glossary.definition}`,
+          10,
+          y
+        );
+        y += 12;
+      }
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save("clearclause-analysis.pdf");
   };
 
   return (
@@ -263,6 +319,24 @@ export default function Popup() {
               </ListItem>
             ))}
           </List>
+          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleExportJSON}
+              sx={{ borderRadius: "8px" }}
+            >
+              Export JSON
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleExportPDF}
+              sx={{ borderRadius: "8px" }}
+            >
+              Export PDF
+            </Button>
+          </Box>
         </Box>
       )}
     </Paper>
