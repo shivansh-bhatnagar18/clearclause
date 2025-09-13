@@ -57,7 +57,11 @@ app.post("/analyze", async (req, res) => {
             "impact": "string — type of impact (e.g., Loss of Rights, Financial Risk, Privacy Concern)",
             "explanation": "string — plain explanation of why this clause matters for the user",
             "category": "string — one of: Payment Terms, Termination, Data Privacy, Liability, Refund Policy, Arbitration, Miscellaneous",
-            "riskLevel": "string — one of: low, medium, high"
+            "riskLevel": "string — one of: low, medium, high",
+            "glossary": {
+              "term": "string — legal or complex term from the clause, or null if none",
+              "definition": "string — plain-language explanation of the term, or null if none"
+            }
           }
         ]
       }
@@ -68,6 +72,7 @@ app.post("/analyze", async (req, res) => {
       - Categories must be chosen only from the provided list. If unsure, use "Miscellaneous".
       - riskLevel must always be a lowercase string: "low", "medium", or "high".
       - Do not include anything outside this JSON object.
+      - Glossary is optional. If not relevant, set "term": null and "definition": null.
       
       IMPORTANT:
       - All values (summary, clause, impact, explanation, category, riskLevel) MUST be written in ${responseLang}.

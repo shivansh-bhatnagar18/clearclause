@@ -11,7 +11,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
+  Chip,
+  Tooltip
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
@@ -21,12 +22,18 @@ const theme = createTheme({
   },
 });
 
+type Glossary = {
+  term: string | null;
+  definition: string | null;
+}
+
 type CriticalPoint = {
   clause: string;
   impact: string;
   explanation: string;
   category: string;
   riskLevel: "low"|"medium"|"high";
+  glossary: Glossary;
 };
 
 const languages = [
@@ -232,7 +239,23 @@ export default function Popup() {
                         <strong>Impact:</strong> {point.impact || "—"}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Explanation:</strong> {point.explanation || "—"}
+                        <strong>Explanation:</strong>{" "}
+                        {point.explanation || "—"}{" "}
+                        {point.glossary?.term && (
+                          <Tooltip title={point.glossary.definition || ""} arrow>
+                            <span
+                              style={{
+                                textDecoration: "underline dotted",
+                                cursor: "help",
+                                color: "#1976d2",
+                                fontWeight: 500,
+                                marginLeft: "4px",
+                              }}
+                            >
+                              {point.glossary.term}
+                            </span>
+                          </Tooltip>
+                        )}
                       </Typography>
                     </>
                   }
