@@ -3,7 +3,6 @@ import cors from "cors";
 import { VertexAI } from "@google-cloud/vertexai";
 import multer from "multer";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
-import { TranslationServiceClient } from "@google-cloud/translate";
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -27,10 +26,6 @@ const vertex_ai = new VertexAI({
     model: "gemini-2.5-pro",
   });
 
-const translationClient = new TranslationServiceClient();
-const projectId = "clearclause-470012";
-const location = "global";
-
 const languageMap = {
   en: "English",
   hi: "Hindi",
@@ -40,22 +35,6 @@ const languageMap = {
   ja: "Japanese",
   zh: "Chinese",
 };
-
-async function translateText(text, targetLanguage) {
-  if (!text) return text;
-  try {
-    const [response] = await translationClient.translateText({
-      parent: `projects/${projectId}/locations/${location}`,
-      contents: [text],
-      mimeType: "text/plain",
-      targetLanguageCode: targetLanguage,
-    });
-    return response.translations?.[0]?.translatedText || text;
-  } catch (err) {
-    console.error("Translation failed:", err);
-    return text; // fallback to original
-  }
-}
 
 app.post("/analyze", async (req, res) => {
     try {
