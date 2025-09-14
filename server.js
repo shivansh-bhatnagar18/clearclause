@@ -101,6 +101,43 @@ app.post("/analyze", async (req, res) => {
     }
   });
 
+  app.post("/chat", async (req, res) => {
+    try {
+      const { text, question, language } = req.body;
+      if (!text || !question) {
+        return res.status(400).json({ error: "Both text and question are required" });
+      }
+  
+      const responseLang = languageMap[language] || "English";
+  
+      const prompt = `
+      You are a legal QnA assistant. 
+      Based ONLY on the following legal document text, answer the user’s question in ${responseLang}.
+      
+      Rules:
+      - Keep answers short, clear, and practical.
+      - If the document does not mention the answer, reply exactly: "This document does not specify that."
+      - Do not fabricate details that are not present in the text.
+      - Respond ONLY in plain text (no JSON required).
+  
+      Document:
+      ${text}
+      
+      User Question:
+      ${question}
+      `;
+  
+      const result = await model.generateContent(prompt);
+      const raw = result.response.candidates[0].content.parts[0].text.trim();
+  
+      console.log("✅ Chat response:", raw);
+      res.json({ answer: raw });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Error generating chat response" });
+    }
+  });
+
 app.post("/extract", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
