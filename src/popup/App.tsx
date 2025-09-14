@@ -11,8 +11,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  Chip,
-  Tooltip
+  Tooltip,
+  TextField
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import jsPDF from "jspdf";
@@ -37,6 +37,11 @@ type CriticalPoint = {
   glossary: Glossary;
 };
 
+type chatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 const languages = [
   { code: "en", name: "English", flag: "🇺🇸" },
   { code: "hi", name: "Hindi", flag: "🇮🇳" },
@@ -48,13 +53,16 @@ const languages = [
 ];
 
 export default function Popup() {
-  const [file, setFile] = useState<File | null>(null);
   const [selected, setSelected] = useState("en");
   const [text, setText] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
   const [criticalPoints, setCriticalPoints] = useState<CriticalPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+
+  const [chatHistory, setChatHistory] = useState<chatMessage[]>([]);
+  const [userInput, setUserInput] = useState<string>("");
+  const [chatLoading, setChatLoading] = useState<boolean>(false);
 
   const askPageForText = (): Promise<{ text: string }> =>
     new Promise((resolve, reject) => {
@@ -183,6 +191,35 @@ export default function Popup() {
     doc.save("clearclause-analysis.pdf");
   };
 
+  const handleAskQuestions = async () => {
+    if (!userInput.trim()) return;
+    const newHistory: chatMessage[] = [...chatHistory, { role: "user", content: userInput.trim() }];
+    setChatHistory(newHistory);
+    setUserInput("");
+    setChatLoading(true);
+
+    try {
+      const resp = await fetch("https://clearclause.onrender.com/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text,
+          question: userInput.trim(),
+          language: selected,
+        }),
+      });
+
+      const data = await resp.json();
+      const answer = data.answer || "No answer from backend";
+      setChatHistory([...newHistory, { role: "assistant", content: answer }]);
+    } catch (err) {
+      console.error("Chat error:", err);
+      setChatHistory([...newHistory, { role: "assistant", content: "Error getting answer" }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
     <Paper
@@ -253,6 +290,69 @@ export default function Popup() {
           <Typography variant="body2" sx={{ mb: 2 }}>
             {summary}
           </Typography>
+
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold", mt: 2 }}>
+              Ask Questions:
+            </Typography>
+            <Paper
+              sx={{
+                maxHeight: 200,
+                overflowY: "auto",
+                p: 1,
+                borderRadius: "8px",
+                mb: 1,
+                mt: 2,
+                backgroundColor: "#fafafa",
+              }}
+            >
+              {chatHistory.map((msg, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    textAlign: msg.role === "user" ? "right" : "left",
+                    mb: 1,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      display: "inline-block",
+                      p: 1,
+                      borderRadius: "12px",
+                      backgroundColor:
+                        msg.role === "user" ? "#1976d2" : "#e0e0e0",
+                      color: msg.role === "user" ? "white" : "black",
+                      maxWidth: "80%",
+                      wordWrap: "break-word",
+                    }}
+                  >
+                    {msg.content}
+                  </Typography>
+                </Box>
+              ))}
+              {chatLoading && (
+                <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+                  Thinking...
+                </Typography>
+              )}
+            </Paper>
+
+            <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Ask a question..."
+              />
+              <Button
+                variant="contained"
+                onClick={handleAskQuestions}
+                disabled={chatLoading}
+              >
+                Send
+              </Button>
+            </Box>
 
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
             Critical Points:
