@@ -19,7 +19,6 @@ async function extractTextFromPDF(url) {
   return data.text;
 }
 
-// Listen for EXTRACT_PDF messages
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "EXTRACT_PDF") {
     extractTextFromPDF(msg.url)
@@ -28,7 +27,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         console.error("PDF extract error:", err);
         sendResponse({ ok: false, error: err.message });
       });
-    return true; // async response
+    return true;
   }
 });
 

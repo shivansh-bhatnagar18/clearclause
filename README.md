@@ -22,10 +22,10 @@ The extension acts as a **first point of contact** for users dealing with contra
 - **📖 Glossary Tooltips**  
   Adds inline tooltips for complex legal jargon, providing simple definitions.
 
-- **💬 Q&A Chatbot** *(coming soon)*  
+- **💬 Q&A Chatbot** 
   Users can ask natural language questions about their document and receive contextual, accurate answers.
 
-- **📤 Export Analysis** *(planned)*  
+- **📤 Export Analysis**  
   Export summaries and highlights to PDF/Markdown for offline use.
 
 ---

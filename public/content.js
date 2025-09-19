@@ -1,4 +1,3 @@
-// Extract HTML text
 function extractLegalText() {
   const selectors = ["main", "article", ".terms", ".privacy", ".content", "body"];
   let textContent = "";
